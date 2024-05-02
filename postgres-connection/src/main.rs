@@ -1,5 +1,12 @@
 use postgres::{Client, NoTls, Error};
 
+#[derive(Debug)]
+struct City {
+    id: i64,
+    name: String,
+    country: String,
+}
+
 fn main() -> Result<(), Error> {
     println!("Hello, world!");
 
@@ -17,5 +24,30 @@ fn main() -> Result<(), Error> {
         )
     ")?;
 
+    let cities = read_cities(&mut client);
+
+    // for city in cities {
+    //     println!("{:?}", city);
+    // }
+
+    println!("{:?}", cities);
+
     Ok(())
+}
+
+fn read_cities(client: &mut Client) -> Option<Vec<City>> {
+    let query = "SELECT id, name, country FROM cities;";
+    let mut res = Vec::new();
+
+    for row in client.query(query, &[]).ok()? {
+        let id: i64 = row.get(0);
+        let name: String = row.get(1);
+        let country: String = row.get(2);
+
+        let city = City { id, name, country };
+
+        res.push(city);
+    }
+
+    Some(res)
 }
