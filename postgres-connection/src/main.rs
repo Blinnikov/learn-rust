@@ -2,7 +2,7 @@ use postgres::{Client, NoTls, Error};
 
 #[derive(Debug)]
 struct City {
-    id: i64,
+    _id: i64,
     name: String,
     country: String,
 }
@@ -23,6 +23,10 @@ fn main() -> Result<(), Error> {
             model TEXT
         )
     ")?;
+    
+    let cities_to_add = get_cities();
+
+    let _ = write_cities(&mut client, &cities_to_add);
 
     let cities = read_cities(&mut client);
 
@@ -44,10 +48,29 @@ fn read_cities(client: &mut Client) -> Option<Vec<City>> {
         let name: String = row.get(1);
         let country: String = row.get(2);
 
-        let city = City { id, name, country };
+        let city = City { _id: id, name, country };
 
         res.push(city);
     }
 
     Some(res)
+}
+
+fn get_cities() -> Vec<City> {
+    vec![
+        City { _id: 0, name: "Москва".to_string(), country: "Россия".to_string() },
+        City { _id: 0, name: "Минск".to_string(), country: "Беларусь".to_string() },
+        City { _id: 0, name: "Ростов-на-Дону".to_string(), country: "Россия".to_string() },
+    ]
+}
+
+fn write_cities(client: &mut Client, cities: &Vec<City>) -> Result<(), Error> {
+    for city in cities {
+        let _row_added = client.execute(
+            "INSERT INTO cities(name, country) VALUES($1, $2)",
+            &[&city.name, &city.country]
+        )?;
+    }
+
+    Ok(())
 }
